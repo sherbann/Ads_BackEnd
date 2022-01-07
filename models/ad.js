@@ -1,10 +1,12 @@
+const { Date } = require('mongoose');
 const mongoose = require('mongoose');
 
 const adSchema = mongoose.Schema({
-  name: String,
+  event: String,
   location: String,
   summary: String,
-  date: Date
+  date: String,
+  time: String
 })
 
 module.exports.Ad = mongoose.model('Ad', adSchema)

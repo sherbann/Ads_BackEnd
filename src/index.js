@@ -7,15 +7,14 @@ const morgan = require('morgan');
 const { ObjectId } = require('mongodb');
 const mongoose = require('mongoose');
 const {v4: uuidv4} = require('uuid');
-
 const { Ad } = require('../models/ad');
-const { Cart } = require('../models/cart');
 const { User } = require('../models/user');
-const { Todo} = require('../models/todo')
+const { query } = require('express');
 mongoose.connect('mongodb+srv://mongo-DevAcademy:sheffield22@cluster0.buz9v.mongodb.net/authorization?retryWrites=true&w=majority');
 const port = process.env.PORT || 3001
 // defining the Express app
 const app = express();
+const defaultSort = {date: 1}
 
 // adding Helmet to enhance your API's security
 app.use(helmet());
@@ -78,36 +77,27 @@ app.put('/:id', async (req, res) => {
   await Ad.findOneAndUpdate({ _id: ObjectId(req.params.id)}, req.body )
   res.send({ message: 'Ad updated.' });
 });
-
-
-
-
-// defining CRUD operations
-app.get('/todo', async (req, res) => {
-  res.send(await Todo.find());
-});
-
-app.post('/todo', async (req, res) => {
-  const newTodo = req.body;
-  const todo = new Todo(newTodo);
-  await todo.save();
-  res.send({ message: 'New todo inserted.' });
-});
-
-app.delete('/todo/:id', async (req, res) => {
-  await Todo.deleteOne({ _id: ObjectId(req.params.id) })
-  res.send({ message: 'todo removed.' });
-});
-
-app.put('/todo/:id', async (req, res) => {
-  await Todo.findOneAndUpdate({ _id: ObjectId(req.params.id)}, req.body )
-  res.send({ message: 'todo updated.' });
-});
-
-
-
-
-
+app.post('/events/:location', async(req,res) =>
+{
+  const { sLocation, sEvent, minDate, maxDate} = req.body
+  const query = {}
+  if (sEvent) {
+    query.event = sEvent
+  }
+  if(sLocation) {
+    query.location = sLocation
+  }
+  if(minDate) {
+    query.date = { $gte: minDate}
+  }
+  if(maxDate) {
+    query.date={$lte:maxDate}
+  }
+  if(!maxDate && minDate){
+    query.date={$eq:minDate}
+  }
+  res.send(await Ad.find(query).sort(defaultSort).lean())
+})
 
 // starting the server
 app.listen(port, () => {
